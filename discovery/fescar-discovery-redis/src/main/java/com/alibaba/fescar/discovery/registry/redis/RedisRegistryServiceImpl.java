@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.alibaba.fescar.discovery.registry;
+package com.alibaba.fescar.discovery.registry.redis;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
@@ -29,12 +29,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import com.alibaba.fescar.common.exception.ShouldNeverHappenException;
+import com.alibaba.fescar.common.loader.LoadLevel;
 import com.alibaba.fescar.common.thread.NamedThreadFactory;
 import com.alibaba.fescar.common.util.NetUtil;
 import com.alibaba.fescar.common.util.StringUtils;
 import com.alibaba.fescar.config.Configuration;
 import com.alibaba.fescar.config.ConfigurationFactory;
 
+import com.alibaba.fescar.discovery.registry.RegistryService;
 import com.google.common.collect.Lists;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
@@ -50,6 +52,7 @@ import redis.clients.jedis.Protocol;
  * @author kl @kailing.pub
  * @date 2019 /2/27
  */
+@LoadLevel(name = "Redis", order = 1)
 public class RedisRegistryServiceImpl implements RegistryService<RedisListener> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisRegistryServiceImpl.class);
@@ -62,12 +65,11 @@ public class RedisRegistryServiceImpl implements RegistryService<RedisListener> 
     private static final String REDIS_PASSWORD = "password";
     private static final ConcurrentMap<String, List<RedisListener>> LISTENER_SERVICE_MAP = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, Set<InetSocketAddress>> CLUSTER_ADDRESS_MAP = new ConcurrentHashMap<>();
-    private static volatile RedisRegistryServiceImpl instance;
     private static volatile JedisPool jedisPool;
     private ExecutorService threadPoolExecutor = new ScheduledThreadPoolExecutor(1,
         new NamedThreadFactory("RedisRegistryService", 1));
 
-    private RedisRegistryServiceImpl() {
+    public RedisRegistryServiceImpl() {
         Configuration fescarConfig = ConfigurationFactory.FILE_INSTANCE;
         this.clusterName = fescarConfig.getConfig(REDIS_FILEKEY_PREFIX + REGISTRY_CLUSTER_KEY, DEFAULT_CLUSTER);
         String password = fescarConfig.getConfig(getRedisPasswordFileKey());
@@ -120,22 +122,6 @@ public class RedisRegistryServiceImpl implements RegistryService<RedisListener> 
         } else {
             jedisPool = new JedisPool(redisConfig, host, port, Protocol.DEFAULT_TIMEOUT, password, db);
         }
-    }
-
-    /**
-     * Gets instance.
-     *
-     * @return the instance
-     */
-    public static RedisRegistryServiceImpl getInstance() {
-        if (null == instance) {
-            synchronized (RedisRegistryServiceImpl.class) {
-                if (null == instance) {
-                    instance = new RedisRegistryServiceImpl();
-                }
-            }
-        }
-        return instance;
     }
 
     @Override

@@ -16,13 +16,14 @@
 
 package com.alibaba.fescar.discovery.registry;
 
-import com.alibaba.fescar.common.exception.NotSupportYetException;
+import com.alibaba.fescar.common.loader.EnhancedServiceLoader;
 import com.alibaba.fescar.config.ConfigurationFactory;
 import com.alibaba.fescar.config.ConfigurationKeys;
 
-import com.alibaba.fescar.discovery.registry.consul.ConsulRegistryServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 /**
  * The type Registry factory.
@@ -48,30 +49,6 @@ public class RegistryFactory {
         } catch (Exception exx) {
             LOGGER.error(exx.getMessage());
         }
-        RegistryService registryService;
-        switch (registryType) {
-            case Nacos:
-                registryService = NacosRegistryServiceImpl.getInstance();
-                break;
-            case Redis:
-                registryService = RedisRegistryServiceImpl.getInstance();
-                break;
-            case Eureka:
-                registryService = EurekaRegistryServiceImpl.getInstance();
-                break;
-            case File:
-                registryService = FileRegistryServiceImpl.getInstance();
-                break;
-            case ZK:
-                registryService = ZookeeperRegisterServiceImpl.getInstance();
-                break;
-            case Consul:
-                registryService = ConsulRegistryServiceImpl.getInstance();
-                break;
-            default:
-                throw new NotSupportYetException("not support register type:" + registryType);
-
-        }
-        return registryService;
+        return EnhancedServiceLoader.load(RegistryService.class, Objects.requireNonNull(registryType).name());
     }
 }

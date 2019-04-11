@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.alibaba.fescar.discovery.registry;
+package com.alibaba.fescar.discovery.registry.redis;
 
 /**
  * The RedisListener
