@@ -16,7 +16,6 @@
 
 package com.alibaba.fescar.discovery.registry.zk;
 
-import com.alibaba.fescar.common.loader.LoadLevel;
 import com.alibaba.fescar.common.util.CollectionUtils;
 import com.alibaba.fescar.common.util.NetUtil;
 import com.alibaba.fescar.config.Configuration;
@@ -48,10 +47,10 @@ import static com.alibaba.fescar.common.Constants.IP_PORT_SPLIT_CHAR;
  * @author crazier.huang
  * @date 2019/2/15
  */
-@LoadLevel(name = "ZK", order = 1)
 public class ZookeeperRegisterServiceImpl implements RegistryService<IZkChildListener> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZookeeperRegisterServiceImpl.class);
 
+    private static volatile ZookeeperRegisterServiceImpl instance;
     private static volatile ZkClient zkClient;
     private static final Configuration FILE_CONFIG = ConfigurationFactory.FILE_INSTANCE;
     private static final String ZK_PATH_SPLIT_CHAR = "/";
@@ -74,7 +73,18 @@ public class ZookeeperRegisterServiceImpl implements RegistryService<IZkChildLis
     private static final int REGISTERED_PATH_SET_SIZE = 1;
     private static final Set<String> REGISTERED_PATH_SET = Collections.synchronizedSet(new HashSet<>(REGISTERED_PATH_SET_SIZE));
 
-    public ZookeeperRegisterServiceImpl() {
+    private ZookeeperRegisterServiceImpl() {
+    }
+
+    static ZookeeperRegisterServiceImpl getInstance() {
+        if (null == instance) {
+            synchronized (ZookeeperRegisterServiceImpl.class) {
+                if (null == instance) {
+                    instance = new ZookeeperRegisterServiceImpl();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override

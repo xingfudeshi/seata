@@ -16,17 +16,15 @@
 
 package com.alibaba.fescar.discovery.registry.file;
 
-import com.alibaba.fescar.common.loader.LoadLevel;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.alibaba.fescar.common.util.StringUtils;
 import com.alibaba.fescar.config.ConfigChangeListener;
 import com.alibaba.fescar.config.Configuration;
 import com.alibaba.fescar.config.ConfigurationFactory;
 import com.alibaba.fescar.discovery.registry.RegistryService;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * The type File registry service.
@@ -34,14 +32,30 @@ import java.util.List;
  * @author jimin.jm @alibaba-inc.com
  * @date 2019 /02/12
  */
-@LoadLevel(name = "File", order = 0)
 public class FileRegistryServiceImpl implements RegistryService<ConfigChangeListener> {
+    private static volatile FileRegistryServiceImpl instance;
     private static final Configuration CONFIG = ConfigurationFactory.getInstance();
     private static final String POSTFIX_GROUPLIST = ".grouplist";
     private static final String ENDPOINT_SPLIT_CHAR = ";";
     private static final String IP_PORT_SPLIT_CHAR = ":";
 
-    public FileRegistryServiceImpl() {
+    private FileRegistryServiceImpl() {
+    }
+
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
+    static FileRegistryServiceImpl getInstance() {
+        if (null == instance) {
+            synchronized (FileRegistryServiceImpl.class) {
+                if (null == instance) {
+                    instance = new FileRegistryServiceImpl();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override

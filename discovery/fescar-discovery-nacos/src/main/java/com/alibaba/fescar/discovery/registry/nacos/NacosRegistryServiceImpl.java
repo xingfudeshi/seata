@@ -23,7 +23,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.alibaba.fescar.common.loader.LoadLevel;
 import com.alibaba.fescar.config.Configuration;
 import com.alibaba.fescar.config.ConfigurationFactory;
 import com.alibaba.fescar.config.ConfigurationKeys;
@@ -42,7 +41,6 @@ import com.alibaba.nacos.client.naming.utils.CollectionUtils;
  * @author jimin.jm @alibaba-inc.com
  * @date 2019 /1/31
  */
-@LoadLevel(name = "Nacos", order = 1)
 public class NacosRegistryServiceImpl implements RegistryService<EventListener> {
     private static final String DEFAULT_NAMESPACE = "public";
     private static final String DEFAULT_CLUSTER = "default";
@@ -54,8 +52,25 @@ public class NacosRegistryServiceImpl implements RegistryService<EventListener> 
     private static volatile NamingService naming;
     private static final ConcurrentMap<String, List<EventListener>> LISTENER_SERVICE_MAP = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, List<InetSocketAddress>> CLUSTER_ADDRESS_MAP = new ConcurrentHashMap<>();
+    private static volatile NacosRegistryServiceImpl instance;
 
-    public NacosRegistryServiceImpl() {
+    private NacosRegistryServiceImpl() {
+    }
+
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
+    static NacosRegistryServiceImpl getInstance() {
+        if (null == instance) {
+            synchronized (NacosRegistryServiceImpl.class) {
+                if (null == instance) {
+                    instance = new NacosRegistryServiceImpl();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override

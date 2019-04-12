@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.alibaba.fescar.common.exception.EurekaRegistryException;
-import com.alibaba.fescar.common.loader.LoadLevel;
 import com.alibaba.fescar.common.util.NetUtil;
 import com.alibaba.fescar.config.Configuration;
 import com.alibaba.fescar.config.ConfigurationFactory;
@@ -51,7 +50,6 @@ import org.slf4j.LoggerFactory;
  * @author: rui_849217@163.com
  * @date: 2018/3/6
  */
-@LoadLevel(name = "Eureka", order = 1)
 public class EurekaRegistryServiceImpl implements RegistryService<EurekaEventListener> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EurekaRegistryServiceImpl.class);
 
@@ -75,12 +73,24 @@ public class EurekaRegistryServiceImpl implements RegistryService<EurekaEventLis
     private static volatile boolean subscribeListener = false;
     private static volatile ApplicationInfoManager applicationInfoManager;
     private static volatile CustomEurekaInstanceConfig instanceConfig;
+    private static volatile EurekaRegistryServiceImpl instance;
     private static volatile EurekaClient eurekaClient;
 
 
-    public EurekaRegistryServiceImpl() {
-        clusterAddressMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
-        instanceConfig = new CustomEurekaInstanceConfig();
+    private EurekaRegistryServiceImpl() {
+    }
+
+    static EurekaRegistryServiceImpl getInstance() {
+        if (null == instance) {
+            synchronized (EurekaRegistryServiceImpl.class) {
+                if (null == instance) {
+                    clusterAddressMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
+                    instanceConfig = new CustomEurekaInstanceConfig();
+                    instance = new EurekaRegistryServiceImpl();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override

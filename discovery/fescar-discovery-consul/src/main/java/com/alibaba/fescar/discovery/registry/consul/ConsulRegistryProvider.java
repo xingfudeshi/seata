@@ -15,19 +15,18 @@
  */
 package com.alibaba.fescar.discovery.registry.consul;
 
-import com.ecwid.consul.v1.health.model.HealthService;
-
-import java.util.List;
+import com.alibaba.fescar.common.loader.LoadLevel;
+import com.alibaba.fescar.discovery.registry.RegistryProvider;
+import com.alibaba.fescar.discovery.registry.RegistryService;
 
 /**
  * @author xingfudeshi@gmail.com
- * @date 2019/3/26
+ * @date 2019/04/12
  */
-public interface ConsulListener {
-    /**
-     * on event
-     *
-     * @param services
-     */
-    void onEvent(List<HealthService> services);
+@LoadLevel(name = "Consul", order = 1)
+public class ConsulRegistryProvider implements RegistryProvider {
+    @Override
+    public RegistryService provide() {
+        return ConsulRegistryServiceImpl.getInstance();
+    }
 }

@@ -16,7 +16,6 @@
 
 package com.alibaba.fescar.discovery.registry.consul;
 
-import com.alibaba.fescar.common.loader.LoadLevel;
 import com.alibaba.fescar.common.thread.NamedThreadFactory;
 import com.alibaba.fescar.common.util.NetUtil;
 import com.alibaba.fescar.config.Configuration;
@@ -34,6 +33,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -46,9 +46,9 @@ import java.util.stream.Collectors;
  * @author xingfudeshi@gmail.com
  * @date 2019/4/1
  */
-@LoadLevel(name = "Consul", order = 1)
 public class ConsulRegistryServiceImpl implements RegistryService<ConsulListener> {
 
+    private static volatile ConsulRegistryServiceImpl instance;
     private static volatile ConsulClient client;
 
     private static final Configuration FILE_CONFIG = ConfigurationFactory.FILE_INSTANCE;
@@ -86,13 +86,32 @@ public class ConsulRegistryServiceImpl implements RegistryService<ConsulListener
      */
     private static final int DEFAULT_WATCH_TIMEOUT = 60;
 
-    public ConsulRegistryServiceImpl() {
-        clusterAddressMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
-        listenerMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
-        notifiers = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
-        notifierExecutor = new ThreadPoolExecutor(THREAD_POOL_NUM, THREAD_POOL_NUM,
-            Integer.MAX_VALUE, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
-            new NamedThreadFactory("fescar-consul-notifier", THREAD_POOL_NUM));
+
+    private ConsulRegistryServiceImpl() {
+    }
+
+    /**
+     * get instance of ConsulRegistryServiceImpl
+     *
+     * @return instance
+     */
+    static ConsulRegistryServiceImpl getInstance() {
+        if (null == instance) {
+            synchronized (ConsulRegistryServiceImpl.class) {
+                if (null == instance) {
+                    //initial the capacity with 8
+                    clusterAddressMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
+                    listenerMap = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
+                    notifiers = new ConcurrentHashMap<>(MAP_INITIAL_CAPACITY);
+                    notifierExecutor = new ThreadPoolExecutor(THREAD_POOL_NUM, THREAD_POOL_NUM,
+                        Integer.MAX_VALUE, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+                        new NamedThreadFactory("fescar-consul-notifier", THREAD_POOL_NUM));
+                    instance = new ConsulRegistryServiceImpl();
+
+                }
+            }
+        }
+        return instance;
     }
 
     @Override

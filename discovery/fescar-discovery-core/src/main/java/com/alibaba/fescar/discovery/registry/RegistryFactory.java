@@ -49,6 +49,6 @@ public class RegistryFactory {
         } catch (Exception exx) {
             LOGGER.error(exx.getMessage());
         }
-        return EnhancedServiceLoader.load(RegistryService.class, Objects.requireNonNull(registryType).name());
+        return EnhancedServiceLoader.load(RegistryProvider.class, Objects.requireNonNull(registryType).name()).provide();
     }
 }

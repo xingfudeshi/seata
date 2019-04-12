@@ -62,7 +62,7 @@ public class EnhancedServiceLoaderTest {
      */
     @Test
     public void testLoadByClassAndActivateName() {
-        Hello englishHello = EnhancedServiceLoader.load(Hello.class, "FrenchHello");
+        Hello englishHello = EnhancedServiceLoader.load(Hello.class, "EnglishHello");
         assertThat(englishHello.say()).isEqualTo("hello!");
     }
 
