@@ -15,9 +15,9 @@
  */
 package com.alibaba.fescar.discovery.registry.eureka;
 
+import com.alibaba.fescar.common.util.StringUtils;
 import com.netflix.appinfo.EurekaInstanceConfig;
 import com.netflix.appinfo.MyDataCenterInstanceConfig;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author: rui_849217@163.com

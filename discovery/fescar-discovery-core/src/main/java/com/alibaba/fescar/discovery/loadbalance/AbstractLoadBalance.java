@@ -18,7 +18,7 @@ package com.alibaba.fescar.discovery.loadbalance;
 
 import java.util.List;
 
-import com.alibaba.nacos.client.naming.utils.CollectionUtils;
+import com.alibaba.fescar.common.util.CollectionUtils;
 
 /**
  * The type Abstract load balance.

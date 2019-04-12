@@ -16,6 +16,7 @@
 package com.alibaba.fescar.discovery.registry.eureka;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -25,10 +26,10 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.alibaba.fescar.common.exception.EurekaRegistryException;
 import com.alibaba.fescar.common.util.NetUtil;
+import com.alibaba.fescar.common.util.StringUtils;
 import com.alibaba.fescar.config.Configuration;
 import com.alibaba.fescar.config.ConfigurationFactory;
 import com.alibaba.fescar.discovery.registry.RegistryService;
-import com.google.common.collect.Lists;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
@@ -40,7 +41,6 @@ import com.netflix.discovery.EurekaEvent;
 import com.netflix.discovery.EurekaEventListener;
 import com.netflix.discovery.shared.Application;
 import com.netflix.discovery.shared.Applications;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +145,7 @@ public class EurekaRegistryServiceImpl implements RegistryService<EurekaEventLis
             });
         }
 
-        return Lists.newArrayList(clusterAddressMap.get(clusterName.toUpperCase()));
+        return new ArrayList<>(clusterAddressMap.get(clusterName.toUpperCase()));
     }
 
     @Override

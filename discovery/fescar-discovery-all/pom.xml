@@ -18,10 +18,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>fescar-discovery-file</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>fescar-discovery-eureka</artifactId>
         </dependency>
         <dependency>
