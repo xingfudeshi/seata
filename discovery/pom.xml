@@ -35,6 +35,7 @@
         <module>seata-discovery-zk</module>
         <module>seata-discovery-redis</module>
         <module>seata-discovery-nacos</module>
+        <module>seata-discovery-etcd</module>
     </modules>
 
     <dependencies>
