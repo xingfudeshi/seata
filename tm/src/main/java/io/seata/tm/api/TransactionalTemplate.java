@@ -45,6 +45,13 @@ public class TransactionalTemplate {
      */
     public Object execute(TransactionalExecutor business) throws Throwable {
         // 1. get or create a transaction
+        /**
+         * 全局事务开始的时候,会创建一个新的全局事务,角色为:GlobalStatus.UnKnown, GlobalTransactionRole.Launcher
+         * 可以参考这里 {@link DefaultGlobalTransaction#DefaultGlobalTransaction()}
+         *
+         * 如果是作为一个全局事务参与者,那么就会根据现有的xid,封装一个GlobalTransaction,角色为:GlobalStatus.Begin, GlobalTransactionRole.Participant
+         * 可以参考这里{@link GlobalTransactionContext#getCurrent()}
+         */
         GlobalTransaction tx = GlobalTransactionContext.getCurrentOrCreate();
 
         // 1.1 get transactionInfo
@@ -55,6 +62,9 @@ public class TransactionalTemplate {
         try {
 
             // 2. begin transaction
+            /**
+             * //开始执行事务的操作,实际上调用的是:{@link DefaultGlobalTransaction#begin(int, String)}
+             */
             beginTransaction(txInfo, tx);
 
             Object rs = null;

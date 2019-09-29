@@ -95,9 +95,17 @@ public class GlobalTransactionalInterceptor implements MethodInterceptor {
         });
     }
 
+    /**
+     * //真正事务的控制,在{@link TransactionalTemplate#execute(TransactionalExecutor)}方法,可以从这里开始看
+     * @param methodInvocation
+     * @param globalTrxAnno
+     * @return
+     * @throws Throwable
+     */
     private Object handleGlobalTransaction(final MethodInvocation methodInvocation,
                                            final GlobalTransactional globalTrxAnno) throws Throwable {
         try {
+            //这里的TransactionalExecutor相当于把事务的执行"上下文"给包了一层
             return transactionalTemplate.execute(new TransactionalExecutor() {
                 @Override
                 public Object execute() throws Throwable {
@@ -114,6 +122,7 @@ public class GlobalTransactionalInterceptor implements MethodInterceptor {
 
                 @Override
                 public TransactionInfo getTransactionInfo() {
+                    //利用TransactionInfo把@GlobalTransactional的属性封装一下,方便后面使用.
                     TransactionInfo transactionInfo = new TransactionInfo();
                     transactionInfo.setTimeOut(globalTrxAnno.timeoutMills());
                     transactionInfo.setName(name());

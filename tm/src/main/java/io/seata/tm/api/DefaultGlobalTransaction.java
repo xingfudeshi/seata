@@ -20,6 +20,7 @@ import io.seata.core.context.RootContext;
 import io.seata.core.exception.TransactionException;
 import io.seata.core.model.GlobalStatus;
 import io.seata.core.model.TransactionManager;
+import io.seata.tm.DefaultTransactionManager;
 import io.seata.tm.TransactionManagerHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +79,7 @@ public class DefaultGlobalTransaction implements GlobalTransaction {
 
     @Override
     public void begin(int timeout, String name) throws TransactionException {
+        //检查当前是不是参与者,如果是参与者,xid不能为空,否则就是异常状态
         if (role != GlobalTransactionRole.Launcher) {
             check();
             if (LOGGER.isDebugEnabled()) {
@@ -85,12 +87,21 @@ public class DefaultGlobalTransaction implements GlobalTransaction {
             }
             return;
         }
+        //这里注意,下面的操作都是基于当前全局事务角色为LAUNCHER,如果是GlobalTransactionRole.Participant,是不走下面的逻辑的.
+        //发起者的时候,xid和RootContext.getXID里面的值都必须是null,否则就是异常状态
         if (xid != null) {
             throw new IllegalStateException();
         }
         if (RootContext.getXID() != null) {
             throw new IllegalStateException();
         }
+        /**
+         * transactionManager采用SPI进行加载,后期这里会是一个拓展点,目前采用的都是default这个
+         *
+         * {@link DefaultTransactionManager#begin(String, String, String, int)}  }
+         * begin方法里面就是调用netty的通信,向TC发起一个开启事务的请求.请求成功后,会返回xid
+         * 然后将xid绑定到RootContext,同时设置当前的status为GlobalStatus.Begin;
+         */
         xid = transactionManager.begin(null, null, name, timeout);
         status = GlobalStatus.Begin;
         RootContext.bind(xid);
