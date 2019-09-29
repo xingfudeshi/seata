@@ -15,6 +15,10 @@
  */
 package io.seata.rm;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.seata.core.protocol.RpcMessage;
+import io.seata.core.rpc.ClientMessageSender;
+import io.seata.core.rpc.netty.AbstractRpcRemotingClient;
 import io.seata.core.rpc.netty.RmMessageListener;
 import io.seata.core.rpc.netty.RmRpcClient;
 
@@ -34,6 +38,12 @@ public class RMClient {
     public static void init(String applicationId, String transactionServiceGroup) {
         RmRpcClient rmRpcClient = RmRpcClient.getInstance(applicationId, transactionServiceGroup);
         rmRpcClient.setResourceManager(DefaultResourceManager.get());
+        /**
+         * 在收到TC的回复消息后
+         * 在这个地方会回调
+         * {@link AbstractRpcRemotingClient#dispatch(RpcMessage, ChannelHandlerContext)}
+         * 然后回调{@link RmMessageListener#onMessage(RpcMessage, String, ClientMessageSender)}
+         */
         rmRpcClient.setClientMessageListener(new RmMessageListener(DefaultRMHandler.get()));
         rmRpcClient.init();
     }
