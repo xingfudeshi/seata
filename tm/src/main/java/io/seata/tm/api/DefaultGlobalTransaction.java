@@ -113,6 +113,8 @@ public class DefaultGlobalTransaction implements GlobalTransaction {
 
     @Override
     public void commit() throws TransactionException {
+        //如果全局事务角色是participant,则不能主导提交操作.
+        //只有发起者LAUNCHER才能主导提交.
         if (role == GlobalTransactionRole.Participant) {
             // Participant has no responsibility of committing
             if (LOGGER.isDebugEnabled()) {
@@ -138,18 +140,22 @@ public class DefaultGlobalTransaction implements GlobalTransaction {
 
     @Override
     public void rollback() throws TransactionException {
+        //如果全局角色为Participant,则不能主导回滚
+
         if (role == GlobalTransactionRole.Participant) {
-            // Participant has no responsibility of committing
+            // Participant has no responsibility of rollbacking
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Ignore Rollback(): just involved in global transaction [" + xid + "]");
             }
             return;
         }
+        //XID不能为空
         if (xid == null) {
             throw new IllegalStateException();
         }
 
         status = transactionManager.rollback(xid);
+        //回滚之后,移除RootContext里面的XID.
         if (RootContext.getXID() != null) {
             if (xid.equals(RootContext.getXID())) {
                 RootContext.unbind();

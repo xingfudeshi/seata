@@ -220,6 +220,10 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
             LOGGER.warn("sendAsyncRequestWithResponse nothing, caused by null channel.");
             return null;
         }
+        /**
+         * 封装RpcMessage,之前的那些GlobalRollbackRequest,GlobalCommitRequest,GlobalStatusRequest,GlobalBeginRequest
+         * 会放在body中,其他的部是header部分.
+         */
         final RpcMessage rpcMessage = new RpcMessage();
         rpcMessage.setId(getNextMessageId());
         rpcMessage.setMessageType(ProtocolConstants.MSGTYPE_RESQUEST_ONEWAY);
@@ -227,6 +231,7 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
         rpcMessage.setCompressor(ProtocolConstants.CONFIGURED_COMPRESSOR);
         rpcMessage.setBody(msg);
 
+        //生成一个MessageFuture,然后拿rpcMessage的id作为key,放在map中.
         final MessageFuture messageFuture = new MessageFuture();
         messageFuture.setRequestMessage(rpcMessage);
         messageFuture.setTimeout(timeout);
@@ -234,8 +239,10 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
 
         if (address != null) {
             ConcurrentHashMap<String, BlockingQueue<RpcMessage>> map = basketMap;
+            //获取当前addrese关联的blokingQueue
             BlockingQueue<RpcMessage> basket = map.get(address);
             if (basket == null) {
+                //如果blockingQueue为空,则创建一个新的
                 map.putIfAbsent(address, new LinkedBlockingQueue<>());
                 basket = map.get(address);
             }
@@ -245,6 +252,11 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
             }
             if (!isSending) {
                 synchronized (mergeLock) {
+
+                    /**notifiyall执行后,
+                     * {@link AbstractRpcRemotingClient#MergedSendRunnable} 开始执行
+                     * 这里是开始
+                     */
                     mergeLock.notifyAll();
                 }
             }
@@ -267,6 +279,10 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
         }
         if (timeout > 0) {
             try {
+                /**
+                 * 返回响应数据,当收到响应数据的时候,会把结果set到messageFuture
+                 * {@link AbstractRpcRemotingClient#channelRead(final ChannelHandlerContext ctx, Object msg)}
+                 */
                 return messageFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (Exception exx) {
                 LOGGER.error("wait response error:" + exx.getMessage() + ",ip:" + address + ",request:" + msg);
@@ -404,6 +420,10 @@ public abstract class AbstractRpcRemoting extends ChannelDuplexHandler implement
                             @Override
                             public void run() {
                                 try {
+                                    /**
+                                     * 这里会调用子类的dispatch,主要是用于通知ClientMessageListener
+                                     * {@link AbstractRpcRemotingClient#dispatch(RpcMessage, ChannelHandlerContext)}
+                                     */
                                     dispatch(rpcMessage, ctx);
                                 } catch (Throwable th) {
                                     LOGGER.error(FrameworkErrorCode.NetDispatch.getErrCode(), th.getMessage(), th);

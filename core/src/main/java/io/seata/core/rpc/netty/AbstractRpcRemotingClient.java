@@ -133,6 +133,7 @@ public abstract class AbstractRpcRemotingClient extends AbstractRpcRemoting
         if (!(msg instanceof RpcMessage)) {
             return;
         }
+        //收到心跳消息
         RpcMessage rpcMessage = (RpcMessage) msg;
         if (rpcMessage.getBody() == HeartbeatMessage.PONG) {
             if (LOGGER.isDebugEnabled()) {
@@ -140,11 +141,13 @@ public abstract class AbstractRpcRemotingClient extends AbstractRpcRemoting
             }
             return;
         }
+        //收到响应结果
         if (rpcMessage.getBody() instanceof MergeResultMessage) {
             MergeResultMessage results = (MergeResultMessage) rpcMessage.getBody();
             MergedWarpMessage mergeMessage = (MergedWarpMessage) mergeMsgMap.remove(rpcMessage.getId());
             for (int i = 0; i < mergeMessage.msgs.size(); i++) {
                 int msgId = mergeMessage.msgIds.get(i);
+                //complet future
                 MessageFuture future = futures.remove(msgId);
                 if (future == null) {
                     if (LOGGER.isInfoEnabled()) {
@@ -156,6 +159,7 @@ public abstract class AbstractRpcRemotingClient extends AbstractRpcRemoting
             }
             return;
         }
+        //继续处理消息
         super.channelRead(ctx, msg);
     }
     
@@ -222,8 +226,10 @@ public abstract class AbstractRpcRemotingClient extends AbstractRpcRemoting
     
     @Override
     public Object sendMsgWithResponse(Object msg, long timeout) throws TimeoutException {
+        //通过负载均衡算法,从registry中lookup一个可用的tc 实例,并获取与之相关的channel
         String validAddress = loadBalance(getTransactionServiceGroup());
         Channel channel = clientChannelManager.acquireChannel(validAddress);
+        //开始发送消息
         Object result = super.sendAsyncRequestWithResponse(validAddress, channel, msg, timeout);
         return result;
     }
@@ -318,6 +324,7 @@ public abstract class AbstractRpcRemotingClient extends AbstractRpcRemoting
                     Channel sendChannel = null;
                     try {
                         sendChannel = clientChannelManager.acquireChannel(address);
+                        //请求rpc
                         sendRequest(sendChannel, mergeMessage);
                     } catch (FrameworkException e) {
                         if (e.getErrcode() == FrameworkErrorCode.ChannelIsNotWritable && sendChannel != null) {

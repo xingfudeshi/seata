@@ -71,15 +71,24 @@ public class TransactionalTemplate {
             try {
 
                 // Do Your Business
+                /**
+                 * 执行真正的业务逻辑,这里会调用MethodInterceptor#invoke传入进来的methodInvocation.proceed();
+                 */
                 rs = business.execute();
 
             } catch (Throwable ex) {
 
                 // 3.the needed business exception to rollback.
+                /**
+                 * 报异常,需要回滚
+                 */
                 completeTransactionAfterThrowing(txInfo,tx,ex);
                 throw ex;
             }
-
+            /**
+             * 没有异常,则提交
+             * 调用的是{@link DefaultGlobalTransaction#commit()} (int, String)}
+             */
             // 4. everything is fine, commit.
             commitTransaction(tx);
 
