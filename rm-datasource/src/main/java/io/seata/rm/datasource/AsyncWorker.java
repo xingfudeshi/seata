@@ -123,6 +123,9 @@ public class AsyncWorker implements ResourceManagerInbound {
         LOGGER.info("Async Commit Buffer Limit: " + ASYNC_COMMIT_BUFFER_LIMIT);
         timerExecutor = new ScheduledThreadPoolExecutor(1,
                 new NamedThreadFactory("AsyncWorker", 1, true));
+        /**
+         * 分支提交并非是可以提交之后,直接提交的,而是一个定时任务,每隔1秒执行一次,然后延迟10毫秒再继续
+         */
         timerExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -136,6 +139,10 @@ public class AsyncWorker implements ResourceManagerInbound {
                 }
             }
         }, 10, 1000 * 1, TimeUnit.MILLISECONDS);
+    }
+
+    public static void main(String[] args){
+
     }
 
     private void doBranchCommits() {
