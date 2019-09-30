@@ -89,6 +89,7 @@ public class DataSourceProxy extends AbstractDataSourceProxy implements Resource
         } catch (SQLException e) {
             throw new IllegalStateException("can not init dataSource", e);
         }
+        //在这里,将当前的DataSourceProxy实例注册到DefaultResourceManager的resourceManagers里面
         DefaultResourceManager.get().registerResource(this);
         if(ENABLE_TABLE_META_CHECKER_ENABLE){
             tableMetaExcutor.scheduleAtFixedRate(new Runnable() {

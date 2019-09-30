@@ -66,6 +66,9 @@ public class DefaultResourceManager implements ResourceManager {
     }
 
     protected void initResourceManagers() {
+        /**
+         * 此时就会把DataSourceManager通过SPI加载进来了
+         */
         //init all resource managers
         List<ResourceManager> allResourceManagers = EnhancedServiceLoader.loadAll(ResourceManager.class);
         if (CollectionUtils.isNotEmpty(allResourceManagers)) {
@@ -111,6 +114,10 @@ public class DefaultResourceManager implements ResourceManager {
 
     @Override
     public void registerResource(Resource resource) {
+        /**
+         * 先根据resource中的branch type获取对应的ResourceManager,然后将
+         * resource注册到resourceManagers,可以查看{@link this#initResourceManagers()}
+         */
         getResourceManager(resource.getBranchType()).registerResource(resource);
     }
 
@@ -138,6 +145,9 @@ public class DefaultResourceManager implements ResourceManager {
      * @return
      */
     public ResourceManager getResourceManager(BranchType branchType) {
+        /**
+         * 这里继续查看resourceManagers的put操作{@link this#initResourceManagers()}
+         */
         ResourceManager rm = resourceManagers.get(branchType);
         if (rm == null) {
             throw new FrameworkException("No ResourceManager for BranchType:" + branchType.name());
