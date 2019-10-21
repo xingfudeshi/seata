@@ -74,11 +74,11 @@ public class TransactionInfoTest {
     public void testRollBackOn() {
         TransactionInfo txInfo = new TransactionInfo();
 
-        //default true
-        assertThat(txInfo.rollbackOn(new IllegalArgumentException())).isTrue();
-        assertThat(txInfo.rollbackOn(new Exception())).isTrue();
-        assertThat(txInfo.rollbackOn(new IOException())).isTrue();
-        assertThat(txInfo.rollbackOn(new NullPointerException())).isTrue();
+        //default false
+        assertThat(txInfo.rollbackOn(new IllegalArgumentException())).isFalse();
+        assertThat(txInfo.rollbackOn(new Exception())).isFalse();
+        assertThat(txInfo.rollbackOn(new IOException())).isFalse();
+        assertThat(txInfo.rollbackOn(new NullPointerException())).isFalse();
 
         Set<RollbackRule> sets = getRollbackRules();
         txInfo.setRollbackRules(sets);

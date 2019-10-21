@@ -71,6 +71,6 @@ public final class TransactionInfo implements Serializable {
             }
         }
 
-        return winner == null || !(winner instanceof NoRollbackRule);
+        return null != winner && !(winner instanceof NoRollbackRule);
     }
 }
