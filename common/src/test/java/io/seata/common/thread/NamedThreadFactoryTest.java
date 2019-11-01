@@ -18,7 +18,7 @@ package io.seata.common.thread;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Otis.z
@@ -40,5 +40,14 @@ public class NamedThreadFactoryTest {
             });
         assertThat(testNameThread.getName()).startsWith("testNameThread");
         assertThat(testNameThread.isDaemon()).isTrue();
+    }
+
+    @Test
+    public void testConstructorWithPrefixAndDaemons() {
+        NamedThreadFactory factory = new NamedThreadFactory("prefix", true);
+        Thread thread = factory.newThread(() -> {});
+
+        assertThat(thread.getName()).startsWith("prefix");
+        assertThat(thread.isDaemon()).isTrue();
     }
 }

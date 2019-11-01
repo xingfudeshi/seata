@@ -16,11 +16,12 @@
 package io.seata.rm.datasource;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import io.seata.common.exception.ShouldNeverHappenException;
-import io.seata.rm.datasource.undo.SQLUndoLog;
 import io.seata.rm.datasource.undo.SQLUndoLog;
 
 /**
@@ -32,7 +33,8 @@ public class ConnectionContext {
     private String xid;
     private Long branchId;
     private boolean isGlobalLockRequire;
-    private List<String> lockKeysBuffer = new ArrayList<>();
+    //table and primary key should not be duplicated
+    private Set<String> lockKeysBuffer = new HashSet<>();
     private List<SQLUndoLog> sqlUndoItemsBuffer = new ArrayList<>();
 
     /**
@@ -152,14 +154,12 @@ public class ConnectionContext {
         this.branchId = branchId;
     }
 
+
     /**
      * Reset.
      */
-    void reset() {
-        xid = null;
-        branchId = null;
-        lockKeysBuffer.clear();
-        sqlUndoItemsBuffer.clear();
+    public void reset() {
+        this.reset(null);
     }
 
     /**
@@ -170,6 +170,7 @@ public class ConnectionContext {
     void reset(String xid) {
         this.xid = xid;
         branchId = null;
+        this.isGlobalLockRequire = false;
         lockKeysBuffer.clear();
         sqlUndoItemsBuffer.clear();
     }

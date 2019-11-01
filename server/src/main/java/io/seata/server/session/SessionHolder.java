@@ -21,13 +21,13 @@ import java.util.Collection;
 
 import io.seata.common.exception.ShouldNeverHappenException;
 import io.seata.common.exception.StoreException;
+import io.seata.common.loader.EnhancedServiceLoader;
 import io.seata.common.util.StringUtils;
 import io.seata.config.Configuration;
 import io.seata.config.ConfigurationFactory;
 import io.seata.core.constants.ConfigurationKeys;
 import io.seata.core.exception.TransactionException;
 import io.seata.core.model.GlobalStatus;
-
 import io.seata.core.store.StoreMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +47,11 @@ public class SessionHolder {
     protected static final Configuration CONFIG = ConfigurationFactory.getInstance();
 
     /**
+     * The constant DEFAULT.
+     */
+    public static final String DEFAULT = "default";
+
+    /**
      * The constant ROOT_SESSION_MANAGER_NAME.
      */
     public static final String ROOT_SESSION_MANAGER_NAME = "root.data";
@@ -62,6 +67,11 @@ public class SessionHolder {
      * The constant RETRY_ROLLBACKING_SESSION_MANAGER_NAME.
      */
     public static final String RETRY_ROLLBACKING_SESSION_MANAGER_NAME = "retry.rollback.data";
+
+    /**
+     * The default session store dir
+     */
+    public static final String DEFAULT_SESSION_STORE_FILE_DIR = "sessionStore";
 
     private static SessionManager ROOT_SESSION_MANAGER;
     private static SessionManager ASYNC_COMMITTING_SESSION_MANAGER;
@@ -82,25 +92,42 @@ public class SessionHolder {
         //the store mode
         StoreMode storeMode = StoreMode.valueof(mode);
         if (StoreMode.DB.equals(storeMode)) {
-            //TODO database store
-
+            //database store
+            ROOT_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, StoreMode.DB.name());
+            ASYNC_COMMITTING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, StoreMode.DB.name(),
+                new Object[] {ASYNC_COMMITTING_SESSION_MANAGER_NAME});
+            RETRY_COMMITTING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, StoreMode.DB.name(),
+                new Object[] {RETRY_COMMITTING_SESSION_MANAGER_NAME});
+            RETRY_ROLLBACKING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, StoreMode.DB.name(),
+                new Object[] {RETRY_ROLLBACKING_SESSION_MANAGER_NAME});
         } else if (StoreMode.FILE.equals(storeMode)) {
             //file store
-            String sessionStorePath = CONFIG.getConfig(ConfigurationKeys.STORE_FILE_DIR);
+            String sessionStorePath = CONFIG.getConfig(ConfigurationKeys.STORE_FILE_DIR, DEFAULT_SESSION_STORE_FILE_DIR);
             if (sessionStorePath == null) {
                 throw new StoreException("the {store.file.dir} is empty.");
             }
-            ROOT_SESSION_MANAGER = new FileBasedSessionManager(ROOT_SESSION_MANAGER_NAME, sessionStorePath);
-            ASYNC_COMMITTING_SESSION_MANAGER = new DefaultSessionManager(ASYNC_COMMITTING_SESSION_MANAGER_NAME);
-            RETRY_COMMITTING_SESSION_MANAGER = new DefaultSessionManager(RETRY_COMMITTING_SESSION_MANAGER_NAME);
-            RETRY_ROLLBACKING_SESSION_MANAGER = new DefaultSessionManager(RETRY_ROLLBACKING_SESSION_MANAGER_NAME);
+            ROOT_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, StoreMode.FILE.name(),
+                new Object[] {ROOT_SESSION_MANAGER_NAME, sessionStorePath});
+            ASYNC_COMMITTING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, DEFAULT,
+                new Object[] {ASYNC_COMMITTING_SESSION_MANAGER_NAME});
+            RETRY_COMMITTING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, DEFAULT,
+                new Object[] {RETRY_COMMITTING_SESSION_MANAGER_NAME});
+            RETRY_ROLLBACKING_SESSION_MANAGER = EnhancedServiceLoader.load(SessionManager.class, DEFAULT,
+                new Object[] {RETRY_ROLLBACKING_SESSION_MANAGER_NAME});
         } else {
             //unknown store
             throw new IllegalArgumentException("unknown store mode:" + mode);
         }
+        //relaod
+        reload();
+    }
 
+    /**
+     * Reload.
+     */
+    protected static void reload() {
         if (ROOT_SESSION_MANAGER instanceof Reloadable) {
-            ((Reloadable) ROOT_SESSION_MANAGER).reload();
+            ((Reloadable)ROOT_SESSION_MANAGER).reload();
 
             Collection<GlobalSession> reloadedSessions = ROOT_SESSION_MANAGER.allSessions();
             if (reloadedSessions != null && !reloadedSessions.isEmpty()) {
@@ -140,7 +167,7 @@ public class SessionHolder {
                                 case CommitRetrying:
                                     try {
                                         globalSession.addSessionLifecycleListener(
-                                                getRetryCommittingSessionManager());
+                                            getRetryCommittingSessionManager());
                                         getRetryCommittingSessionManager().addGlobalSession(globalSession);
                                     } catch (TransactionException e) {
                                         throw new ShouldNeverHappenException(e);
@@ -152,7 +179,7 @@ public class SessionHolder {
                                 case TimeoutRollbackRetrying:
                                     try {
                                         globalSession.addSessionLifecycleListener(
-                                                getRetryRollbackingSessionManager());
+                                            getRetryRollbackingSessionManager());
                                         getRetryRollbackingSessionManager().addGlobalSession(globalSession);
                                     } catch (TransactionException e) {
                                         throw new ShouldNeverHappenException(e);
@@ -173,7 +200,6 @@ public class SessionHolder {
                 });
             }
         }
-
     }
 
     /**
@@ -225,13 +251,30 @@ public class SessionHolder {
     }
 
     /**
-     * Find global session global session.
+     * Find global session.
      *
-     * @param transactionId the transaction id
+     * @param xid the xid
      * @return the global session
-     * @throws TransactionException the transaction exception
      */
-    public static GlobalSession findGlobalSession(Long transactionId) throws TransactionException {
-        return getRootSessionManager().findGlobalSession(transactionId);
+    public static GlobalSession findGlobalSession(String xid) {
+        return findGlobalSession(xid, true);
+    }
+
+    /**
+     * Find global session.
+     *
+     * @param xid the xid
+     * @param withBranchSessions the withBranchSessions
+     * @return the global session
+     */
+    public static GlobalSession findGlobalSession(String xid, boolean withBranchSessions) {
+        return getRootSessionManager().findGlobalSession(xid, withBranchSessions);
+    }
+
+    public static void destroy() {
+        ROOT_SESSION_MANAGER.destroy();
+        ASYNC_COMMITTING_SESSION_MANAGER.destroy();
+        RETRY_COMMITTING_SESSION_MANAGER.destroy();
+        RETRY_ROLLBACKING_SESSION_MANAGER.destroy();
     }
 }

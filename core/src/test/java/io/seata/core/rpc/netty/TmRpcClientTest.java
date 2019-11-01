@@ -15,20 +15,20 @@
  */
 package io.seata.core.rpc.netty;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFactory;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import org.apache.commons.pool.impl.GenericKeyedObjectPool;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ChannelFactory;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import org.apache.commons.pool.impl.GenericKeyedObjectPool;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * The type Tm rpc client test.
@@ -40,27 +40,28 @@ public class TmRpcClientTest {
 
     private static final ThreadPoolExecutor
         workingThreads = new ThreadPoolExecutor(100, 500, 500, TimeUnit.SECONDS,
-        new LinkedBlockingQueue(20000), new ThreadPoolExecutor.CallerRunsPolicy());
+        new LinkedBlockingQueue<>(20000), new ThreadPoolExecutor.CallerRunsPolicy());
 
     /**
      * Test get instance.
      *
-     * @throws Exception the exception
+     * @throws Exception the exceptionDataSourceManager.
      */
     @Test
     public void testGetInstance() throws Exception {
         String applicationId = "app 1";
         String transactionServiceGroup = "group A";
         TmRpcClient tmRpcClient = TmRpcClient.getInstance(applicationId, transactionServiceGroup);
-
+        Field nettyClientKeyPoolField = getDeclaredField(tmRpcClient.getClientChannelManager(), "nettyClientKeyPool");
+        nettyClientKeyPoolField.setAccessible(true);
+        GenericKeyedObjectPool nettyClientKeyPool = (GenericKeyedObjectPool) nettyClientKeyPoolField.get(tmRpcClient.getClientChannelManager());
         NettyClientConfig defaultNettyClientConfig = new NettyClientConfig();
-        GenericKeyedObjectPool.Config config = tmRpcClient.getNettyPoolConfig();
-        Assert.assertEquals(defaultNettyClientConfig.getMaxPoolActive(), config.maxActive);
-        Assert.assertEquals(defaultNettyClientConfig.getMinPoolIdle(), config.minIdle);
-        Assert.assertEquals(defaultNettyClientConfig.getMaxAcquireConnMills(), config.maxWait);
-        Assert.assertEquals(defaultNettyClientConfig.isPoolTestBorrow(), config.testOnBorrow);
-        Assert.assertEquals(defaultNettyClientConfig.isPoolTestReturn(), config.testOnReturn);
-        Assert.assertEquals(defaultNettyClientConfig.isPoolLifo(), config.lifo);
+        Assertions.assertEquals(defaultNettyClientConfig.getMaxPoolActive(), nettyClientKeyPool.getMaxActive());
+        Assertions.assertEquals(defaultNettyClientConfig.getMinPoolIdle(), nettyClientKeyPool.getMinIdle());
+        Assertions.assertEquals(defaultNettyClientConfig.getMaxAcquireConnMills(), nettyClientKeyPool.getMaxWait());
+        Assertions.assertEquals(defaultNettyClientConfig.isPoolTestBorrow(), nettyClientKeyPool.getTestOnBorrow());
+        Assertions.assertEquals(defaultNettyClientConfig.isPoolTestReturn(), nettyClientKeyPool.getTestOnReturn());
+        Assertions.assertEquals(defaultNettyClientConfig.isPoolLifo(), nettyClientKeyPool.getLifo());
     }
 
     /**
@@ -77,26 +78,29 @@ public class TmRpcClientTest {
         tmRpcClient.init();
 
         //check if attr of tmRpcClient object has been set success
-        Field bootstrapField = getDeclaredField(tmRpcClient, "bootstrap");
+        Field clientBootstrapField = getDeclaredField(tmRpcClient, "clientBootstrap");
+        clientBootstrapField.setAccessible(true);
+        RpcClientBootstrap clientBootstrap = (RpcClientBootstrap)clientBootstrapField.get(tmRpcClient);
+        Field bootstrapField = getDeclaredField(clientBootstrap, "bootstrap");
         bootstrapField.setAccessible(true);
-        Bootstrap bootstrap = (Bootstrap)bootstrapField.get(tmRpcClient);
+        Bootstrap bootstrap = (Bootstrap) bootstrapField.get(clientBootstrap);
 
-        Assert.assertNotNull(bootstrap);
+        Assertions.assertNotNull(bootstrap);
         Field optionsField = getDeclaredField(bootstrap, "options");
         optionsField.setAccessible(true);
         Map<ChannelOption<?>, Object> options = (Map<ChannelOption<?>, Object>)optionsField.get(bootstrap);
-        Assert.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.TCP_NODELAY)));
-        Assert.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.SO_KEEPALIVE)));
-        Assert.assertEquals(10000, options.get(ChannelOption.CONNECT_TIMEOUT_MILLIS));
-        Assert.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.SO_KEEPALIVE)));
-        Assert.assertEquals(153600, options.get(ChannelOption.SO_RCVBUF));
+        Assertions.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.TCP_NODELAY)));
+        Assertions.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.SO_KEEPALIVE)));
+        Assertions.assertEquals(10000, options.get(ChannelOption.CONNECT_TIMEOUT_MILLIS));
+        Assertions.assertTrue(Boolean.TRUE.equals(options.get(ChannelOption.SO_KEEPALIVE)));
+        Assertions.assertEquals(153600, options.get(ChannelOption.SO_RCVBUF));
 
         Field channelFactoryField = getDeclaredField(bootstrap, "channelFactory");
         channelFactoryField.setAccessible(true);
         ChannelFactory<? extends Channel>
             channelFactory = (ChannelFactory<? extends Channel>)channelFactoryField.get(bootstrap);
-        Assert.assertNotNull(channelFactory);
-        Assert.assertTrue(channelFactory.newChannel() instanceof NioSocketChannel);
+        Assertions.assertNotNull(channelFactory);
+        Assertions.assertTrue(channelFactory.newChannel() instanceof NioSocketChannel);
 
     }
 

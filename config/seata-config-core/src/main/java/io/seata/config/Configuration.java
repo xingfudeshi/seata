@@ -15,6 +15,7 @@
  */
 package io.seata.config;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -25,6 +26,33 @@ import java.util.List;
  * @date 2018 /12/20
  */
 public interface Configuration<T> {
+
+    /**
+     * Gets short.
+     *
+     * @param dataId       the data id
+     * @param defaultValue the default value
+     * @param timeoutMills the timeout mills
+     * @return the short
+     */
+    short getShort(String dataId, int defaultValue, long timeoutMills);
+
+    /**
+     * Gets short.
+     *
+     * @param dataId       the data id
+     * @param defaultValue the default value
+     * @return the int
+     */
+    short getShort(String dataId, short defaultValue);
+
+    /**
+     * Gets short.
+     *
+     * @param dataId the data id
+     * @return the int
+     */
+    short getShort(String dataId);
 
     /**
      * Gets int.
@@ -79,6 +107,33 @@ public interface Configuration<T> {
      * @return the long
      */
     long getLong(String dataId);
+
+    /**
+     * Gets duration.
+     *
+     * @param dataId the data id
+     * @return the duration
+     */
+    Duration getDuration(String dataId);
+
+    /**
+     * Gets duration.
+     *
+     * @param dataId       the data id
+     * @param defaultValue the default value
+     * @return the duration
+     */
+    Duration getDuration(String dataId, Duration defaultValue);
+
+    /**
+     * Gets duration.
+     *
+     * @param dataId       the data id
+     * @param defaultValue the default value
+     * @param timeoutMills the timeout mills
+     * @return he duration
+     */
+    Duration getDuration(String dataId, Duration defaultValue, long timeoutMills);
 
     /**
      * Gets boolean.
@@ -221,5 +276,15 @@ public interface Configuration<T> {
      * @return the config listeners
      */
     List<T> getConfigListeners(String dataId);
+
+    /**
+     * Gets config from sys pro.
+     *
+     * @param dataId the data id
+     * @return the config from sys pro
+     */
+    default String getConfigFromSysPro(String dataId) {
+        return System.getProperty(dataId);
+    }
 
 }

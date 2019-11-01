@@ -18,8 +18,8 @@ package io.seata.core.message;
 import io.seata.core.protocol.RegisterTMResponse;
 import io.seata.core.protocol.ResultCode;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * The type Register tm response test.
@@ -34,13 +34,10 @@ public class RegisterTMResponseTest {
     @Test
     public void testToString() throws Exception {
         RegisterTMResponse registerTMResponse = new RegisterTMResponse();
-
         registerTMResponse.setVersion("1");
         registerTMResponse.setIdentified(true);
         registerTMResponse.setResultCode(ResultCode.Success);
-
-        Assert.assertEquals("version=1,extraData=null,identified=true,resultCode=Success,msg=null",
-            registerTMResponse.toString());
-
+        Assertions.assertEquals("version=1,extraData=null,identified=true,resultCode=Success,msg=null",
+                registerTMResponse.toString());
     }
 }

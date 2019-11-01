@@ -24,6 +24,8 @@ import java.util.Map;
  */
 public interface ResourceManager extends ResourceManagerInbound, ResourceManagerOutbound {
 
+    Object RESOURCE_LOCK = new Object();
+
     /**
      * Register a Resource to be managed by Resource Manager.
      *
@@ -46,8 +48,9 @@ public interface ResourceManager extends ResourceManagerInbound, ResourceManager
     Map<String, Resource> getManagedResources();
 
     /**
-     * get the BranchType
-     * @return
+     * Get the BranchType.
+     *
+     * @return The BranchType of ResourceManager.
      */
     BranchType getBranchType();
 }

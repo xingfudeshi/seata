@@ -17,6 +17,7 @@ package io.seata.server.lock;
 
 import io.seata.core.exception.TransactionException;
 import io.seata.server.session.BranchSession;
+import io.seata.server.session.GlobalSession;
 
 /**
  * The interface Lock manager.
@@ -35,15 +36,33 @@ public interface LockManager {
     boolean acquireLock(BranchSession branchSession) throws TransactionException;
 
     /**
-     * Is lockable boolean.
+     * Un lock boolean.
      *
-     * @param transactionId the transaction id
-     * @param resourceId    the resource id
-     * @param lockKey       the lock key
+     * @param branchSession the branch session
      * @return the boolean
      * @throws TransactionException the transaction exception
      */
-    boolean isLockable(long transactionId, String resourceId, String lockKey) throws TransactionException;
+    boolean releaseLock(BranchSession branchSession) throws TransactionException;
+
+    /**
+     * Un lock boolean.
+     *
+     * @param globalSession the global session
+     * @return the boolean
+     * @throws TransactionException the transaction exception
+     */
+    boolean releaseGlobalSessionLock(GlobalSession globalSession) throws TransactionException;
+
+    /**
+     * Is lockable boolean.
+     *
+     * @param xid        the xid
+     * @param resourceId the resource id
+     * @param lockKey    the lock key
+     * @return the boolean
+     * @throws TransactionException the transaction exception
+     */
+    boolean isLockable(String xid, String resourceId, String lockKey) throws TransactionException;
 
     /**
      * Clean all locks.
@@ -51,4 +70,5 @@ public interface LockManager {
      * @throws TransactionException the transaction exception
      */
     void cleanAllLocks() throws TransactionException;
+
 }

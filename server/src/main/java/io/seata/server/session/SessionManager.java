@@ -21,13 +21,14 @@ import java.util.List;
 import io.seata.core.exception.TransactionException;
 import io.seata.core.model.BranchStatus;
 import io.seata.core.model.GlobalStatus;
+import io.seata.core.rpc.Disposable;
 
 /**
  * The interface Session manager.
  *
  * @author sharajava
  */
-public interface SessionManager extends SessionLifecycleListener {
+public interface SessionManager extends SessionLifecycleListener, Disposable {
 
     /**
      * Add global session.
@@ -40,11 +41,19 @@ public interface SessionManager extends SessionLifecycleListener {
     /**
      * Find global session global session.
      *
-     * @param transactionId the transaction id
+     * @param xid the xid
      * @return the global session
-     * @throws TransactionException the transaction exception
      */
-    GlobalSession findGlobalSession(Long transactionId) throws TransactionException;
+    GlobalSession findGlobalSession(String xid) ;
+
+    /**
+     * Find global session global session.
+     *
+     * @param xid the xid
+     * @param withBranchSessions the withBranchSessions
+     * @return the global session
+     */
+    GlobalSession findGlobalSession(String xid, boolean withBranchSessions);
 
     /**
      * Update global session status.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~  Copyright 1999-2018 Alibaba Group Holding Ltd.
+  ~  Copyright 1999-2019 Seata.io Group.
   ~
   ~  Licensed under the Apache License, Version 2.0 (the "License");
   ~  you may not use this file except in compliance with the License.
@@ -28,31 +28,61 @@
     <name>seata-server ${project.version}</name>
 
     <dependencies>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>seata-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>seata-config-all</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>seata-discovery-all</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>seata-codec-all</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>seata-compressor-all</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>seata-metrics-all</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- for database -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -77,10 +107,14 @@
                     <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
                     <repositoryLayout>flat</repositoryLayout>
                     <repositoryName>lib</repositoryName>
+                    <encoding>UTF-8</encoding>
+                    <useWildcardClassPath>true</useWildcardClassPath>
                     <binFileExtensions>
                         <unix>.sh</unix>
+                        <windows>.bat</windows>
                     </binFileExtensions>
                     <assembleDirectory>../distribution</assembleDirectory>
+                    <logsDirectory>logs</logsDirectory>
                     <programs>
                         <program>
                             <mainClass>io.seata.server.Server</mainClass>
@@ -88,9 +122,33 @@
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-server</extraArgument>
-                                    <extraArgument>-XX:MaxDirectMemorySize=1024M</extraArgument>
+                                    <extraArgument>-Xmx2048m</extraArgument>
+                                    <extraArgument>-Xms2048m</extraArgument>
+                                    <extraArgument>-Xmn1024m</extraArgument>
+                                    <extraArgument>-Xss512k</extraArgument>
+                                    <extraArgument>-XX:SurvivorRatio=10</extraArgument>
+                                    <extraArgument>-XX:MetaspaceSize=128m</extraArgument>
+                                    <extraArgument>-XX:MaxMetaspaceSize=256m</extraArgument>
+                                    <extraArgument>-XX:MaxDirectMemorySize=1024m</extraArgument>
+                                    <extraArgument>-XX:-OmitStackTraceInFastThrow</extraArgument>
+                                    <extraArgument>-XX:-UseAdaptiveSizePolicy</extraArgument>
+                                    <extraArgument>-XX:+HeapDumpOnOutOfMemoryError</extraArgument>
+                                    <extraArgument>-XX:HeapDumpPath=@BASEDIR@/logs/java_heapdump.hprof</extraArgument>
+                                    <!--gc-->
+                                    <extraArgument>-XX:+DisableExplicitGC</extraArgument>
+                                    <extraArgument>-XX:+CMSParallelRemarkEnabled</extraArgument>
+                                    <extraArgument>-XX:+UseCMSInitiatingOccupancyOnly</extraArgument>
+                                    <extraArgument>-XX:CMSInitiatingOccupancyFraction=75</extraArgument>
+                                    <extraArgument>-Xloggc:@BASEDIR@/logs/seata_gc.log</extraArgument>
+                                    <extraArgument>-verbose:gc</extraArgument>
+                                    <!--netty-->
+                                    <extraArgument>-Dio.netty.leakDetectionLevel=advanced</extraArgument>
                                 </extraArguments>
                             </jvmSettings>
+                            <platforms>
+                                <platform>windows</platform>
+                                <platform>unix</platform>
+                            </platforms>
                         </program>
                     </programs>
                 </configuration>

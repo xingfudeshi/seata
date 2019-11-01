@@ -38,7 +38,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import io.seata.rm.datasource.sql.struct.Null;
-import io.seata.rm.datasource.sql.struct.Null;
 
 /**
  * The type Abstract prepared statement proxy.
@@ -247,7 +246,7 @@ public abstract class AbstractPreparedStatementProxy extends StatementProxy<Prep
 
     @Override
     public void addBatch() throws SQLException {
-
+        targetStatement.addBatch();
     }
 
     @Override

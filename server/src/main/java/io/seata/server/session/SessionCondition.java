@@ -24,17 +24,52 @@ import io.seata.core.model.GlobalStatus;
  * @date 2018 /12/13
  */
 public class SessionCondition {
+    private Long transactionId;
+    private String xid;
     private GlobalStatus status;
+    private GlobalStatus[] statuses;
     private long overTimeAliveMills;
 
     /**
      * Instantiates a new Session condition.
+     */
+    public SessionCondition() {
+    }
+
+    /**
+     * Instantiates a new Session condition.
      *
-     * @param status             the status
+     * @param xid the xid
+     */
+    public SessionCondition(String xid) {
+        this.xid = xid;
+    }
+
+    /**
+     * Instantiates a new Session condition.
+     *
+     * @param status the status
+     */
+    public SessionCondition(GlobalStatus status) {
+        this.status = status;
+        statuses = new GlobalStatus[] {status};
+    }
+
+    /**
+     * Instantiates a new Session condition.
+     *
+     * @param statuses the statuses
+     */
+    public SessionCondition(GlobalStatus[] statuses) {
+        this.statuses = statuses;
+    }
+
+    /**
+     * Instantiates a new Session condition.
+     *
      * @param overTimeAliveMills the over time alive mills
      */
-    public SessionCondition(GlobalStatus status, long overTimeAliveMills) {
-        this.status = status;
+    public SessionCondition(long overTimeAliveMills) {
         this.overTimeAliveMills = overTimeAliveMills;
     }
 
@@ -72,5 +107,29 @@ public class SessionCondition {
      */
     public void setOverTimeAliveMills(long overTimeAliveMills) {
         this.overTimeAliveMills = overTimeAliveMills;
+    }
+
+    public Long getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public String getXid() {
+        return xid;
+    }
+
+    public void setXid(String xid) {
+        this.xid = xid;
+    }
+
+    public GlobalStatus[] getStatuses() {
+        return statuses;
+    }
+
+    public void setStatuses(GlobalStatus[] statuses) {
+        this.statuses = statuses;
     }
 }

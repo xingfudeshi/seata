@@ -15,11 +15,13 @@
  */
 package io.seata.server.coordinator;
 
+import io.netty.channel.Channel;
 import io.seata.common.XID;
 import io.seata.common.util.NetUtil;
 import io.seata.core.exception.TransactionException;
 import io.seata.core.model.BranchStatus;
 import io.seata.core.model.BranchType;
+import io.seata.core.protocol.RpcMessage;
 import io.seata.core.protocol.transaction.BranchCommitRequest;
 import io.seata.core.protocol.transaction.BranchCommitResponse;
 import io.seata.core.protocol.transaction.BranchRollbackRequest;
@@ -27,16 +29,20 @@ import io.seata.core.protocol.transaction.BranchRollbackResponse;
 import io.seata.core.rpc.ServerMessageSender;
 import io.seata.server.session.GlobalSession;
 import io.seata.server.session.SessionHolder;
-import io.netty.channel.Channel;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 /**
  * The type DefaultCoordinator test.
@@ -67,42 +73,63 @@ public class DefaultCoordinatorTest {
 
     private static Core core = new DefaultCore();
 
-    @BeforeClass
+    @BeforeAll
     public static void beforeClass() throws Exception {
         XID.setIpAddress(NetUtil.getLocalIp());
         SessionHolder.init(null);
         serverMessageSender = new MockServerMessageSender();
         defaultCoordinator = new DefaultCoordinator(serverMessageSender);
-        defaultCoordinator.init();
+//        defaultCoordinator.init();
     }
 
-    @Test(dataProvider = "xidAndBranchIdProviderForCommit")
-    public void branchCommit(String xid, Long branchId) {
+    @ParameterizedTest
+    @MethodSource("xidAndBranchIdProviderForCommit")
+    public void branchCommit(String xid, Long branchId) throws TransactionException {
         BranchStatus result = null;
 
         try {
             result = defaultCoordinator.branchCommit(BranchType.AT, xid, branchId, resourceId, applicationData);
         } catch (TransactionException e) {
-            Assert.fail(e.getMessage());
+            Assertions.fail(e.getMessage());
         }
-        Assert.assertEquals(result, BranchStatus.PhaseTwo_Committed);
+        Assertions.assertEquals(result, BranchStatus.PhaseTwo_Committed);
 
+        //clear
+        GlobalSession globalSession = SessionHolder.findGlobalSession(xid);
+        Assertions.assertNotNull(globalSession);
+        globalSession.end();
     }
-
-    @Test(dataProvider = "xidAndBranchIdProviderForRollback")
+    @Disabled
+    @ParameterizedTest
+    @MethodSource("xidAndBranchIdProviderForRollback")
     public void branchRollback(String xid, Long branchId) {
         BranchStatus result = null;
         try {
             result = defaultCoordinator.branchRollback(BranchType.AT, xid, branchId, resourceId, applicationData);
         } catch (TransactionException e) {
-            Assert.fail(e.getMessage());
+            Assertions.fail(e.getMessage());
         }
+        Assertions.assertEquals(result, BranchStatus.PhaseTwo_Rollbacked);
+    }
 
-        Assert.assertEquals(result, BranchStatus.PhaseTwo_Rollbacked);
+
+    @Test
+    public void test_handleRetryRollbacking() throws TransactionException, InterruptedException {
+
+        String xid = core.begin(applicationId, txServiceGroup, txName, 10);
+        Long branchId = core.branchRegister(BranchType.AT, "abcd", clientId, xid, applicationData, lockKeys_2);
+
+        Thread.sleep(100);
+
+        defaultCoordinator.timeoutCheck();
+        defaultCoordinator.handleRetryRollbacking();
+
+        GlobalSession globalSession = SessionHolder.findGlobalSession(xid);
+        Assertions.assertNull(globalSession);
 
     }
 
-    @AfterClass
+    @AfterAll
     public static void afterClass() throws Exception {
 
         Collection<GlobalSession> globalSessions = SessionHolder.getRootSessionManager().allSessions();
@@ -113,28 +140,31 @@ public class DefaultCoordinatorTest {
         for (GlobalSession globalSession : globalSessions) {
             globalSession.closeAndClean();
         }
+
+        SessionHolder.destroy();
     }
 
-
-    @DataProvider
-    public static Object[][] xidAndBranchIdProviderForCommit() throws Exception {
+    static Stream<Arguments> xidAndBranchIdProviderForCommit() throws Exception {
         String xid = core.begin(applicationId, txServiceGroup, txName, timeout);
         Long branchId = core.branchRegister(BranchType.AT, resourceId, clientId, xid, applicationData, lockKeys_1);
-        return new Object[][]{{xid, branchId}};
+        return Stream.of(
+                Arguments.of(xid, branchId)
+        );
     }
 
-    @DataProvider
-    public static Object[][] xidAndBranchIdProviderForRollback() throws Exception {
+    static Stream<Arguments> xidAndBranchIdProviderForRollback() throws Exception {
         String xid = core.begin(applicationId, txServiceGroup, txName, timeout);
         Long branchId = core.branchRegister(BranchType.AT, resourceId, clientId, xid, applicationData, lockKeys_2);
-        return new Object[][]{{xid, branchId}};
+        return Stream.of(
+                Arguments.of(xid, branchId)
+        );
     }
 
 
     private static class MockServerMessageSender implements ServerMessageSender {
 
         @Override
-        public void sendResponse(long msgId, Channel channel, Object msg) {
+        public void sendResponse(RpcMessage request, Channel channel, Object msg) {
 
         }
 
@@ -158,6 +188,21 @@ public class DefaultCoordinatorTest {
 
             return sendSyncRequest(resourceId, clientId, message, 3000);
 
+        }
+
+        @Override
+        public Object sendASyncRequest(Channel channel, Object message) throws IOException, TimeoutException {
+            return null;
+        }
+
+        @Override
+        public Object sendSyncRequest(Channel clientChannel, Object message) throws TimeoutException {
+            return null;
+        }
+
+        @Override
+        public Object sendSyncRequest(Channel clientChannel, Object message, long timeout) throws TimeoutException {
+            return null;
         }
     }
 }

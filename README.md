@@ -6,11 +6,12 @@
 [![codecov](https://codecov.io/gh/seata/seata/branch/develop/graph/badge.svg)](https://codecov.io/gh/seata/seata)
 [![license](https://img.shields.io/github/license/seata/seata.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![maven](https://img.shields.io/maven-central/v/io.seata/seata-parent.svg)](https://search.maven.org/search?q=io.seata)
+[![](https://img.shields.io/twitter/follow/seataio.svg?label=Follow&style=social&logoWidth=0)](https://twitter.com/intent/follow?screen_name=seataio)
+
 
 ## What is Seata?
 
 A **distributed transaction solution** with high performance and ease of use for **microservices** architecture.
-
 ### Distributed Transaction Problem in Microservices
 
 Let's imagine a traditional monolithic application. Its business is built up with 3 modules. They use a single local data source.
@@ -74,31 +75,17 @@ For more details about principle and design, please go to [Seata wiki page](http
 
 ##### Seata Community
 
-- **Seata** :Simple Extensible Autonomous Transaction Architecture. Ant Financial joins Fescar, which make it to be a more neutral and open community for distributed transaction，and Fescar be rename to Seata.
+- **Seata** :Simple Extensible Autonomous Transaction Architecture. Ant Financial joins Fescar, which make it to be a more neutral and open community for distributed transaction，and Fescar be renamed to Seata.
 
 
 
 ## Maven dependency
 ```xml
-<seata.version>0.5.1</seata.version>
+<seata.version>0.9.0</seata.version>
 
 <dependency>
     <groupId>io.seata</groupId>
-    <artifactId>seata-spring</artifactId>
-    <version>${seata.version}</version>
-</dependency>
-
-<!--dependency for Apache Dubbo-->
-<dependency>
-    <groupId>io.seata</groupId>
-    <artifactId>seata-dubbo</artifactId>
-    <version>${seata.version}</version>
-</dependency>
-
-<!--dependency for Alibaba Dubbo-->
-<dependency>
-    <groupId>io.seata</groupId>
-    <artifactId>seata-dubbo-alibaba</artifactId>
+    <artifactId>seata-all</artifactId>
     <version>${seata.version}</version>
 </dependency>
 
@@ -118,7 +105,7 @@ Please follow the [template](https://github.com/seata/seata/blob/develop/.github
 
 ## Contributing
 
-Contributors are welcomed to join the FEATS project. Please check [CONTRIBUTING](./CONTRIBUTING.md) about how to contribute to this project.
+Contributors are welcomed to join the Seata project. Please check [CONTRIBUTING](./CONTRIBUTING.md) about how to contribute to this project.
 
 
 ## Contact
@@ -126,7 +113,7 @@ Contributors are welcomed to join the FEATS project. Please check [CONTRIBUTING]
 * [Twitter](https://twitter.com/seataio): Follow along for latest Seata news on Twitter.
 
 * Mailing list: 
-  * dev-fescar@googlegroups.com , for dev/user discussion. [subscribe](mailto:dev-fescar+subscribe@googlegroups.com), [unsubscribe](mailto:dev-fescar+unsubscribe@googlegroups.com), [archive](https://groups.google.com/forum/#!forum/dev-fescar)
+  * dev-seata@googlegroups.com , for dev/user discussion. [subscribe](mailto:dev-seata+subscribe@googlegroups.com), [unsubscribe](mailto:dev-seata+unsubscribe@googlegroups.com), [archive](https://groups.google.com/forum/#!forum/dev-seata)
   
 **Dingtalk**
 
@@ -140,7 +127,7 @@ Contributors are welcomed to join the FEATS project. Please check [CONTRIBUTING]
 * [Seata Docker](https://github.com/seata/seata-docker) - Seata integration with docker
 * [Seata K8s](https://github.com/seata/seata-k8s) - Seata integration with k8s
 * [Awesome Seata](https://github.com/seata/awesome-seata) - Description of Seata related projects 
-* [Seata Website](https://github.com/seata/seata.github.io) - Seata official website （***In the process of design***）
+* [Seata Website](https://github.com/seata/seata.github.io) - Seata official website
 
 ## Contributors
 

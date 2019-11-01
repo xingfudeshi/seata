@@ -24,6 +24,7 @@ import io.seata.core.protocol.transaction.BranchCommitRequest;
 import io.seata.core.protocol.transaction.BranchCommitResponse;
 import io.seata.core.protocol.transaction.BranchRollbackRequest;
 import io.seata.core.protocol.transaction.BranchRollbackResponse;
+import io.seata.core.protocol.transaction.UndoLogDeleteRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -36,16 +37,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DefaultRMHandler extends AbstractRMHandler {
 
-    protected static Map<BranchType, AbstractRMHandler> allRMHandlersMap = new ConcurrentHashMap<BranchType, AbstractRMHandler>();
+    protected static Map<BranchType, AbstractRMHandler> allRMHandlersMap
+        = new ConcurrentHashMap<BranchType, AbstractRMHandler>();
 
-    protected DefaultRMHandler(){
+    protected DefaultRMHandler() {
         initRMHandlers();
     }
 
-    protected void initRMHandlers(){
+    protected void initRMHandlers() {
         List<AbstractRMHandler> allRMHandlers = EnhancedServiceLoader.loadAll(AbstractRMHandler.class);
-        if(CollectionUtils.isNotEmpty(allRMHandlers)){
-            for(AbstractRMHandler rmHandler : allRMHandlers){
+        if (CollectionUtils.isNotEmpty(allRMHandlers)) {
+            for (AbstractRMHandler rmHandler : allRMHandlers) {
                 allRMHandlersMap.put(rmHandler.getBranchType(), rmHandler);
             }
         }
@@ -61,7 +63,12 @@ public class DefaultRMHandler extends AbstractRMHandler {
         return getRMHandler(request.getBranchType()).handle(request);
     }
 
-    protected AbstractRMHandler getRMHandler(BranchType branchType){
+    @Override
+    public void handle(UndoLogDeleteRequest request) {
+        getRMHandler(request.getBranchType()).handle(request);
+    }
+
+    protected AbstractRMHandler getRMHandler(BranchType branchType) {
         return allRMHandlersMap.get(branchType);
     }
 

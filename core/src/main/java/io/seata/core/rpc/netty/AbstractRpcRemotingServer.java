@@ -20,11 +20,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.seata.common.XID;
-import io.seata.common.thread.NamedThreadFactory;
-import io.seata.core.rpc.RemotingServer;
-import io.seata.discovery.registry.RegistryFactory;
-
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -37,6 +32,12 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.seata.common.XID;
+import io.seata.common.thread.NamedThreadFactory;
+import io.seata.core.rpc.RemotingServer;
+import io.seata.core.rpc.netty.v1.ProtocolV1Decoder;
+import io.seata.core.rpc.netty.v1.ProtocolV1Encoder;
+import io.seata.discovery.registry.RegistryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * The type Rpc remoting server.
  *
  * @author jimin.jm @alibaba-inc.com
+ * @author xingfudeshi@gmail.com
  * @date 2018 /9/12
  */
 public abstract class AbstractRpcRemotingServer extends AbstractRpcRemoting implements RemotingServer {
@@ -54,6 +56,7 @@ public abstract class AbstractRpcRemotingServer extends AbstractRpcRemoting impl
     private final NettyServerConfig nettyServerConfig;
     private int listenPort;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+
     /**
      * Sets listen port.
      *
@@ -135,7 +138,8 @@ public abstract class AbstractRpcRemotingServer extends AbstractRpcRemoting impl
                 @Override
                 public void initChannel(SocketChannel ch) {
                     ch.pipeline().addLast(new IdleStateHandler(nettyServerConfig.getChannelMaxReadIdleSeconds(), 0, 0))
-                        .addLast(new MessageCodecHandler());
+                            .addLast(new ProtocolV1Decoder())
+                            .addLast(new ProtocolV1Encoder());
                     if (null != channelHandlers) {
                         addChannelPipelineLast(ch, channelHandlers);
                     }
@@ -159,14 +163,13 @@ public abstract class AbstractRpcRemotingServer extends AbstractRpcRemoting impl
 
     }
 
-
     @Override
     public void shutdown() {
         try {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Shuting server down. ");
+                LOGGER.debug("Shutting server down. ");
             }
-            if (initialized.get()){
+            if (initialized.get()) {
                 RegistryFactory.getInstance().unregister(new InetSocketAddress(XID.getIpAddress(), XID.getPort()));
                 RegistryFactory.getInstance().close();
                 //wait a few seconds for server transport
@@ -183,7 +186,7 @@ public abstract class AbstractRpcRemotingServer extends AbstractRpcRemoting impl
     @Override
     public void destroyChannel(String serverAddress, Channel channel) {
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("will destroy channel:" + channel + ",address:" + serverAddress);
+            LOGGER.info("will destroy channel:{},address:{}", channel, serverAddress);
         }
         channel.disconnect();
         channel.close();

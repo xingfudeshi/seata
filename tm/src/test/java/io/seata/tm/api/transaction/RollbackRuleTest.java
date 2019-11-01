@@ -16,11 +16,13 @@
 package io.seata.tm.api.transaction;
 
 import io.seata.common.exception.ShouldNeverHappenException;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author guoyao
  * @date 2019/4/18
@@ -57,23 +59,38 @@ public class RollbackRuleTest {
         RollbackRule rr = new RollbackRule(java.lang.Throwable.class.getName());
         assertThat(rr.getDepth(new MyRuntimeException("")) > 0).isTrue();
         assertThat(rr.getDepth(new IOException()) > 0).isTrue();
-        assertThat(rr.getDepth(new ShouldNeverHappenException(null,null)) > 0).isTrue();
+        assertThat(rr.getDepth(new ShouldNeverHappenException(null, null)) > 0).isTrue();
         assertThat(rr.getDepth(new RuntimeException()) > 0).isTrue();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void ctorArgMustBeAThrowableClassWithNonThrowableType() {
-        new RollbackRule(String.class);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RollbackRule(String.class));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void ctorArgMustBeAThrowableClassWithNullThrowableType() {
-        new RollbackRule((Class<?>) null);
+        Assertions.assertThrows(NullPointerException.class, () -> new RollbackRule((Class<?>) null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void ctorArgExceptionStringNameVersionWithNull() {
-        new RollbackRule((String) null);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RollbackRule((String) null));
+    }
+    @Test
+    public void toStringTest(){
+        RollbackRule otherRollbackRuleByName = new RollbackRule(Exception.class.getName());
+        Assertions.assertEquals(otherRollbackRuleByName.toString(),"RollbackRule with pattern [" + Exception.class.getName() + "]");
     }
 
+    @Test
+    public void equalsTest(){
+        RollbackRule otherRollbackRuleByName = new RollbackRule(Exception.class.getName());
+        RollbackRule otherRollbackRuleByName2 = new NoRollbackRule(Exception.class.getName());
+
+        Assertions.assertFalse(otherRollbackRuleByName.equals(""));
+        Assertions.assertTrue(otherRollbackRuleByName.equals(otherRollbackRuleByName));
+        Assertions.assertTrue(otherRollbackRuleByName.equals(otherRollbackRuleByName2));
+
+    }
 }

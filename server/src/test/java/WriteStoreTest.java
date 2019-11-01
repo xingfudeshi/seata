@@ -27,11 +27,13 @@ import io.seata.server.session.BranchSession;
 import io.seata.server.session.GlobalSession;
 import io.seata.server.session.SessionCondition;
 import io.seata.server.session.SessionManager;
-import io.seata.server.store.FileTransactionStoreManager;
+import io.seata.server.store.ReloadableStore;
 import io.seata.server.store.SessionStorable;
 import io.seata.server.store.TransactionStoreManager;
 import io.seata.server.store.TransactionStoreManager.LogOperation;
 import io.seata.server.store.TransactionWriteStore;
+import io.seata.server.store.file.FileTransactionStoreManager;
+
 
 /**
  * The type Write store test.
@@ -61,12 +63,22 @@ public class WriteStoreTest {
         "~/Documents/test/data",
             new SessionManager() {
                 @Override
+                public void destroy() {
+
+                }
+
+                @Override
                 public void addGlobalSession(GlobalSession session) throws TransactionException {
 
                 }
 
                 @Override
-                public GlobalSession findGlobalSession(Long transactionId) throws TransactionException {
+                public GlobalSession findGlobalSession(String xid)  {
+                    return null;
+                }
+
+                @Override
+                public GlobalSession findGlobalSession(String xid, boolean withBranchSessions) {
                     return null;
                 }
 
@@ -215,8 +227,8 @@ public class WriteStoreTest {
 
     private static Map<SessionStorable, LogOperation> readAll(TransactionStoreManager transactionStoreManager) {
         Map<SessionStorable, LogOperation> resultMap = new HashMap<>(65535 * 5 * 9);
-        while (transactionStoreManager.hasRemaining(true)) {
-            List<TransactionWriteStore> transactionWriteStores = transactionStoreManager.readWriteStoreFromFile(2000,
+        while (((ReloadableStore)transactionStoreManager).hasRemaining(true)) {
+            List<TransactionWriteStore> transactionWriteStores = ((ReloadableStore)transactionStoreManager).readWriteStore(2000,
                 true);
             if (null != transactionWriteStores) {
                 for (TransactionWriteStore transactionWriteStore : transactionWriteStores) {
@@ -225,8 +237,8 @@ public class WriteStoreTest {
                 }
             }
         }
-        while (transactionStoreManager.hasRemaining(false)) {
-            List<TransactionWriteStore> transactionWriteStores = transactionStoreManager.readWriteStoreFromFile(2000,
+        while (((ReloadableStore)transactionStoreManager).hasRemaining(false)) {
+            List<TransactionWriteStore> transactionWriteStores = ((ReloadableStore)transactionStoreManager).readWriteStore(2000,
                 false);
             if (null != transactionWriteStores) {
                 for (TransactionWriteStore transactionWriteStore : transactionWriteStores) {

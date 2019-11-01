@@ -25,9 +25,7 @@ import io.seata.core.model.BranchStatus;
 import io.seata.core.model.BranchType;
 import io.seata.core.model.ResourceManagerInbound;
 import io.seata.rm.DefaultResourceManager;
-import io.seata.rm.datasource.undo.UndoLogManager;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import io.seata.rm.datasource.undo.UndoLogManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +33,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +101,7 @@ public class AsyncWorker implements ResourceManagerInbound {
     }
 
     private static int ASYNC_COMMIT_BUFFER_LIMIT = ConfigurationFactory.getInstance().getInt(
-        CLIENT_ASYNC_COMMIT_BUFFER_LIMIT, 10000);
+            CLIENT_ASYNC_COMMIT_BUFFER_LIMIT, 10000);
 
     private static final BlockingQueue<Phase2Context> ASYNC_COMMIT_BUFFER = new LinkedBlockingQueue<>(ASYNC_COMMIT_BUFFER_LIMIT);
 
@@ -123,7 +122,7 @@ public class AsyncWorker implements ResourceManagerInbound {
     public synchronized void init() {
         LOGGER.info("Async Commit Buffer Limit: " + ASYNC_COMMIT_BUFFER_LIMIT);
         timerExecutor = new ScheduledThreadPoolExecutor(1,
-            new NamedThreadFactory("AsyncWorker", 1, true));
+                new NamedThreadFactory("AsyncWorker", 1, true));
         timerExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -158,10 +157,11 @@ public class AsyncWorker implements ResourceManagerInbound {
 
         for (Map.Entry<String, List<Phase2Context>> entry : mappedContexts.entrySet()) {
             Connection conn = null;
+            DataSourceProxy dataSourceProxy;
             try {
                 try {
                     DataSourceManager resourceManager = (DataSourceManager) DefaultResourceManager.get().getResourceManager(BranchType.AT);
-                    DataSourceProxy dataSourceProxy = resourceManager.get(entry.getKey());
+                    dataSourceProxy = resourceManager.get(entry.getKey());
                     if (dataSourceProxy == null) {
                         throw new ShouldNeverHappenException("Failed to find resource on " + entry.getKey());
                     }
@@ -179,7 +179,7 @@ public class AsyncWorker implements ResourceManagerInbound {
                     int maxSize = xids.size() > branchIds.size() ? xids.size() : branchIds.size();
                     if(maxSize == UNDOLOG_DELETE_LIMIT_SIZE){
                         try {
-                            UndoLogManager.batchDeleteUndoLog(xids, branchIds, UNDOLOG_DELETE_LIMIT_SIZE, conn);
+                            UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType()).batchDeleteUndoLog(xids, branchIds, conn);
                         } catch (Exception ex) {
                             LOGGER.warn("Failed to batch delete undo log [" + branchIds + "/" + xids + "]", ex);
                         }
@@ -193,7 +193,7 @@ public class AsyncWorker implements ResourceManagerInbound {
                 }
 
                 try {
-                    UndoLogManager.batchDeleteUndoLog(xids, branchIds, UNDOLOG_DELETE_LIMIT_SIZE, conn);
+                    UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType()).batchDeleteUndoLog(xids, branchIds, conn);
                 }catch (Exception ex) {
                     LOGGER.warn("Failed to batch delete undo log [" + branchIds + "/" + xids + "]", ex);
                 }

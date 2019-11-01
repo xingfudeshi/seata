@@ -16,7 +16,6 @@
 package io.seata.core.protocol.transaction;
 
 import io.seata.core.rpc.RpcContext;
-import io.seata.core.rpc.RpcContext;
 
 /**
  * The interface Tc inbound handler.
@@ -87,5 +86,14 @@ public interface TCInboundHandler {
      * @return the global status response
      */
     GlobalStatusResponse handle(GlobalStatusRequest globalStatus, RpcContext rpcContext);
+
+    /**
+     * Handle global report request.
+     *
+     * @param globalReport the global report request
+     * @param rpcContext   the rpc context
+     * @return the global report response
+     */
+    GlobalReportResponse handle(GlobalReportRequest globalReport, RpcContext rpcContext);
 
 }

@@ -15,6 +15,11 @@
  */
 package io.seata.config;
 
+
+import io.seata.common.util.DurationUtil;
+
+import java.time.Duration;
+
 /**
  * The type Abstract configuration.
  *
@@ -28,6 +33,22 @@ public abstract class AbstractConfiguration<T> implements Configuration<T> {
      * The constant DEFAULT_CONFIG_TIMEOUT.
      */
     protected static final long DEFAULT_CONFIG_TIMEOUT = 5 * 1000;
+
+    @Override
+    public short getShort(String dataId, int defaultValue, long timeoutMills) {
+        String result = getConfig(dataId, String.valueOf(defaultValue), timeoutMills);
+        return Short.parseShort(result);
+    }
+
+    @Override
+    public short getShort(String dataId, short defaultValue) {
+        return getShort(dataId, defaultValue, DEFAULT_CONFIG_TIMEOUT);
+    }
+
+    @Override
+    public short getShort(String dataId) {
+        return getShort(dataId, (short) 0);
+    }
 
     @Override
     public int getInt(String dataId, int defaultValue, long timeoutMills) {
@@ -59,6 +80,22 @@ public abstract class AbstractConfiguration<T> implements Configuration<T> {
     @Override
     public long getLong(String dataId) {
         return getLong(dataId, 0L);
+    }
+
+    @Override
+    public Duration getDuration(String dataId) {
+        return getDuration(dataId, Duration.ZERO);
+    }
+
+    @Override
+    public Duration getDuration(String dataId, Duration defaultValue) {
+        return getDuration(dataId, defaultValue, DEFAULT_CONFIG_TIMEOUT);
+    }
+
+    @Override
+    public Duration getDuration(String dataId, Duration defaultValue, long timeoutMills) {
+        String result = getConfig(dataId, defaultValue.toMillis() + "ms", timeoutMills);
+        return DurationUtil.parse(result);
     }
 
     @Override
