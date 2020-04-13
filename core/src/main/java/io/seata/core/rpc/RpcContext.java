@@ -15,19 +15,17 @@
  */
 package io.seata.core.rpc;
 
-import java.net.SocketAddress;
+import io.netty.channel.Channel;
+import io.seata.common.util.StringUtils;
+import io.seata.core.rpc.netty.NettyPoolKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import io.seata.common.Constants;
-
-import io.netty.channel.Channel;
-import io.seata.core.rpc.netty.NettyPoolKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The type rpc context.
@@ -71,7 +69,7 @@ public class RpcContext {
      * Release.
      */
     public void release() {
-        Integer clientPort = getClientPortFromChannel(channel);
+        Integer clientPort = ChannelUtil.getClientPortFromChannel(channel);
         if (clientIDHolderMap != null) {
             clientIDHolderMap = null;
         }
@@ -100,7 +98,7 @@ public class RpcContext {
             throw new IllegalStateException();
         }
         this.clientTMHolderMap = clientTMHolderMap;
-        Integer clientPort = getClientPortFromChannel(channel);
+        Integer clientPort = ChannelUtil.getClientPortFromChannel(channel);
         this.clientTMHolderMap.put(clientPort, this);
     }
 
@@ -127,7 +125,7 @@ public class RpcContext {
         if (null == this.clientRMHolderMap) {
             this.clientRMHolderMap = new ConcurrentHashMap<String, ConcurrentMap<Integer, RpcContext>>();
         }
-        Integer clientPort = getClientPortFromChannel(channel);
+        Integer clientPort = ChannelUtil.getClientPortFromChannel(channel);
         portMap.put(clientPort, this);
         this.clientRMHolderMap.put(resourceId, portMap);
     }
@@ -265,28 +263,6 @@ public class RpcContext {
         this.version = version;
     }
 
-    private static String getAddressFromChannel(Channel channel) {
-        SocketAddress socketAddress = channel.remoteAddress();
-        String address = socketAddress.toString();
-        if (socketAddress.toString().indexOf(Constants.ENDPOINT_BEGIN_CHAR) == 0) {
-            address = socketAddress.toString().substring(Constants.ENDPOINT_BEGIN_CHAR.length());
-        }
-        return address;
-    }
-
-    private static Integer getClientPortFromChannel(Channel channel) {
-        String address = getAddressFromChannel(channel);
-        Integer port = 0;
-        try {
-            if (address.contains(Constants.IP_PORT_SPLIT_CHAR)) {
-                port = Integer.parseInt(address.substring(address.lastIndexOf(Constants.IP_PORT_SPLIT_CHAR) + 1));
-            }
-        } catch (NumberFormatException exx) {
-            LOGGER.error(exx.getMessage());
-        }
-        return port;
-    }
-
     /**
      * Gets get resource sets.
      *
@@ -311,7 +287,10 @@ public class RpcContext {
      * @param resource the resource
      */
     public void addResource(String resource) {
-        if (null == resource) {
+        if (StringUtils.isBlank(resource)) {
+            return;
+        }
+        if (null == resourceSets) {
             this.resourceSets = new HashSet<String>();
         }
         this.resourceSets.add(resource);
@@ -320,14 +299,14 @@ public class RpcContext {
     /**
      * Add resources.
      *
-     * @param resource the resource
+     * @param resources the resources
      */
-    public void addResources(Set<String> resource) {
-        if (null == resource) { return; }
+    public void addResources(Set<String> resources) {
+        if (null == resources) { return; }
         if (null == resourceSets) {
             this.resourceSets = new HashSet<String>();
         }
-        this.resourceSets.addAll(resource);
+        this.resourceSets.addAll(resources);
     }
 
     /**
