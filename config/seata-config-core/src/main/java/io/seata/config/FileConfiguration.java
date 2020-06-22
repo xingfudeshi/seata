@@ -144,7 +144,7 @@ public class FileConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public String getConfig(String dataId, String defaultValue, long timeoutMills) {
+    public String getLatestConfig(String dataId, String defaultValue, long timeoutMills) {
         String value;
         if ((value = getConfigFromSysPro(dataId)) != null) {
             return value;
@@ -269,8 +269,8 @@ public class FileConfiguration extends AbstractConfiguration {
                 } catch (Exception e) {
                     setFailResult(configFuture);
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Could not found property {}, try to use default value instead.",
-                            configFuture.getDataId());
+                        LOGGER.debug("Could not found property {}, try to use default value instead. exception:{}",
+                            configFuture.getDataId(), e.getMessage());
                     }
                 }
             }
@@ -313,7 +313,8 @@ public class FileConfiguration extends AbstractConfiguration {
         public void onChangeEvent(ConfigurationChangeEvent event) {
             while (true) {
                 try {
-                    String currentConfig = ConfigurationFactory.getInstance().getConfig(dataId);
+                    String currentConfig =
+                        ConfigurationFactory.getInstance().getLatestConfig(dataId, null, DEFAULT_CONFIG_TIMEOUT);
                     String oldConfig = listenedConfigMap.get(dataId);
                     if (ObjectUtils.notEqual(currentConfig, oldConfig)) {
                         listenedConfigMap.put(dataId, currentConfig);
