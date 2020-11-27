@@ -21,9 +21,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.seata.common.exception.FrameworkException;
+import io.seata.common.util.CollectionUtils;
 import io.seata.saga.engine.pcext.handlers.ChoiceStateHandler;
 import io.seata.saga.engine.pcext.handlers.CompensationTriggerStateHandler;
 import io.seata.saga.engine.pcext.handlers.FailEndStateHandler;
+import io.seata.saga.engine.pcext.handlers.ScriptTaskStateHandler;
 import io.seata.saga.engine.pcext.handlers.ServiceTaskStateHandler;
 import io.seata.saga.engine.pcext.handlers.SubStateMachineHandler;
 import io.seata.saga.engine.pcext.handlers.SucceedEndStateHandler;
@@ -40,11 +42,10 @@ import io.seata.saga.statelang.domain.State;
  */
 public class StateMachineProcessHandler implements ProcessHandler {
 
-    private Map<String, StateHandler> stateHandlers = new ConcurrentHashMap<String, StateHandler>();
+    private final Map<String, StateHandler> stateHandlers = new ConcurrentHashMap<>();
 
     @Override
     public void process(ProcessContext context) throws FrameworkException {
-
         StateInstruction instruction = context.getInstruction(StateInstruction.class);
         State state = instruction.getState(context);
         String stateType = state.getType();
@@ -58,7 +59,7 @@ public class StateMachineProcessHandler implements ProcessHandler {
         List<StateHandlerInterceptor> executedInterceptors = null;
         Exception exception = null;
         try {
-            if (interceptors != null && interceptors.size() > 0) {
+            if (CollectionUtils.isNotEmpty(interceptors)) {
                 executedInterceptors = new ArrayList<>(interceptors.size());
                 for (StateHandlerInterceptor interceptor : interceptors) {
                     executedInterceptors.add(interceptor);
@@ -72,21 +73,20 @@ public class StateMachineProcessHandler implements ProcessHandler {
             exception = e;
             throw e;
         } finally {
-
-            if (executedInterceptors != null && executedInterceptors.size() > 0) {
+            if (CollectionUtils.isNotEmpty(executedInterceptors)) {
                 for (int i = executedInterceptors.size() - 1; i >= 0; i--) {
                     StateHandlerInterceptor interceptor = executedInterceptors.get(i);
                     interceptor.postProcess(context, exception);
                 }
             }
         }
-
     }
 
     public void initDefaultHandlers() {
-        if (stateHandlers.size() == 0) {
-
+        if (stateHandlers.isEmpty()) {
             stateHandlers.put(DomainConstants.STATE_TYPE_SERVICE_TASK, new ServiceTaskStateHandler());
+
+            stateHandlers.put(DomainConstants.STATE_TYPE_SCRIPT_TASK, new ScriptTaskStateHandler());
 
             stateHandlers.put(DomainConstants.STATE_TYPE_SUB_MACHINE_COMPENSATION, new ServiceTaskStateHandler());
 

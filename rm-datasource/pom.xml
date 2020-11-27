@@ -83,7 +83,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -95,6 +94,12 @@
         <dependency>
             <groupId>de.javakaffee</groupId>
             <artifactId>kryo-serializers</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>de.ruedigermoeller</groupId>
+            <artifactId>fst</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
