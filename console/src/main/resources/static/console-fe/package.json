@@ -78,7 +78,7 @@
     "@alicloud/console-components-actions": "^1.0.4",
     "@alicloud/console-components-app-layout": "^1.0.4",
     "@alicloud/console-components-console-menu": "^1.0.4",
-    "axios": "^0.27.2",
+    "axios": "^1.6.4",
     "decode-uri-component": "^0.2.2",
     "history": "^4.10.1",
     "jquery": "^3.3.1",
