@@ -33,7 +33,7 @@
     <description>skywalking plugin for Seata built with Maven</description>
 
     <properties>
-        <skywalking.version>8.6.0</skywalking.version>
+        <skywalking.version>8.16.0</skywalking.version>
 
         <maven-antrun-plugin.skip>true</maven-antrun-plugin.skip>
         <agent.dir>${project.build.directory}/ext/skywalking-agent/</agent.dir>
@@ -201,7 +201,7 @@
                             </goals>
                             <configuration>
                                 <tasks>
-                                    <copy overwrite="true" file="${project.basedir}/config/agent.config" tofile="${agent-config.dir}/agent.config" />
+                                    <copy overwrite="true" file="${project.basedir}/config/agent.config" tofile="${agent-config.dir}/agent.config"/>
                                 </tasks>
                             </configuration>
                         </execution>
