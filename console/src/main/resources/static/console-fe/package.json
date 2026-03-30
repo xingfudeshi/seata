@@ -68,7 +68,7 @@
     "style-loader": "^2.0.0",
     "typescript": "^5.3.3",
     "url-loader": "^4.1.1",
-    "webpack": "^5.102.1",
+    "webpack": "^5.105.4",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.2"
   },
@@ -114,7 +114,7 @@
     "node-forge": "1.4.0",
     "min-document": "^2.19.1",
     "js-yaml": "^3.14.2",
-    "qs": "^6.14.1",
+    "qs": "^6.15.0",
     "tar": "7.5.11",
     "minimatch": "^3.1.4",
     "svgo": "^3.3.3",
